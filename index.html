@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Super Action Doggo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="game-canvas" aria-label="Super Action Doggo 3D view"></canvas>
+  <div id="overlay-root">
+    <section id="start-screen" class="overlay-section" aria-label="Start screen">
+      <header class="start-header">
+        <h1 class="game-title">Super Action Doggo</h1>
+        <p class="start-subtitle">Pick your pup</p>
+      </header>
+      <div class="dog-cards">
+        <button type="button" class="dog-card" data-dog-index="0" aria-pressed="true">
+          <span class="dog-tagline"></span>
+          <span class="dog-name"></span>
+        </button>
+        <button type="button" class="dog-card" data-dog-index="1" aria-pressed="false">
+          <span class="dog-tagline"></span>
+          <span class="dog-name"></span>
+        </button>
+      </div>
+      <div class="start-bar">
+        <button type="button" id="start-button">Start</button>
+      </div>
+    </section>
+    <section id="playing-hud" class="overlay-section hidden" aria-label="Game HUD">
+      <div class="hud-strip">
+        <span id="hud-dog-name" class="hud-dog-name"></span>
+        <button type="button" id="back-to-start">Back to start</button>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
