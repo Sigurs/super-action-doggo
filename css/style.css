@@ -183,3 +183,76 @@ body {
 #back-to-start:hover {
   background: rgba(255, 255, 255, 0.28);
 }
+
+#lock-hint {
+  position: absolute;
+  bottom: 4.5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1.2rem;
+  border-radius: 999px;
+  background: rgba(38, 48, 59, 0.55);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#lock-hint.hidden {
+  display: none;
+}
+
+#bark-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0.35rem 0.85rem;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(38, 48, 59, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -135%) scale(0.4);
+}
+
+#bark-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+#bark-bubble.pop {
+  animation: bark-pop 0.55s ease-out forwards;
+}
+
+@keyframes bark-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -135%) scale(0.4);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -135%) scale(1.15);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -135%) scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -145%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -160%) scale(1);
+  }
+}

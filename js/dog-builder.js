@@ -156,19 +156,34 @@ function buildLegs(params) {
   const legHeight = params.legLength + params.bodyHeight * 0.35;
   const legGeometry = new THREE.CylinderGeometry(params.legRadius, params.legRadius * 1.08, legHeight, 7);
   const pawGeometry = new THREE.SphereGeometry(params.legRadius * 1.35, 7, 5);
+  const pivots = {};
+  const legNames = {
+    '1,1': 'frontLeft',
+    '-1,1': 'frontRight',
+    '1,-1': 'backLeft',
+    '-1,-1': 'backRight'
+  };
   for (const xSide of [-1, 1]) {
     for (const zSide of [-1, 1]) {
+      const name = legNames[`${xSide},${zSide}`];
       const x = xSide * (params.bodyWidth / 2 - params.legRadius * 1.1);
       const z = zSide * (params.bodyLength / 2 - params.legRadius * 1.7);
+      const pivot = new THREE.Group();
+      pivot.name = `leg-${name}`;
+      pivot.position.set(x, legHeight, z);
+      pivot.userData.baseX = x;
+      pivot.userData.baseZ = z;
       const leg = new THREE.Mesh(legGeometry, material(params.bodyColor));
-      leg.position.set(x, legHeight / 2, z);
+      leg.position.set(0, -legHeight / 2, 0);
       const paw = new THREE.Mesh(pawGeometry, material(params.bellyColor));
       paw.scale.set(1, 0.75, 1.15);
-      paw.position.set(x, params.legRadius * 0.6, z + zSide * params.legRadius * 0.3);
-      legs.add(leg, paw);
+      paw.position.set(0, -(legHeight - params.legRadius * 0.6), zSide * params.legRadius * 0.3);
+      pivot.add(leg, paw);
+      legs.add(pivot);
+      pivots[name] = pivot;
     }
   }
-  return legs;
+  return { group: legs, pivots };
 }
 
 export function createDog(params) {
@@ -204,14 +219,14 @@ export function createDog(params) {
   tail.position.set(0, p.bodyHeight * 0.24, -p.bodyLength / 2 + p.bodyWidth * 0.06);
   torso.add(tail);
 
-  const legs = buildLegs(p);
+  const { group: legs, pivots: legPivots } = buildLegs(p);
 
   dog.add(torso, legs);
   dog.userData = {
     name: p.name,
     tagline: p.tagline,
     params: p,
-    parts: { torso, head, tail, legs }
+    parts: { torso, head, tail, legs, legPivots }
   };
   return dog;
 }

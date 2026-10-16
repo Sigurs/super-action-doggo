@@ -38,11 +38,11 @@ The start screen SHALL make clear which dog is currently selected and SHALL let 
 - **THEN** the start screen updates to show the newly selected dog as the current choice
 
 ### Requirement: The game starts with the chosen dog
-The game SHALL leave the start screen and begin gameplay with the dog chosen on the start screen; in this milestone gameplay SHALL be a minimal placeholder scene (ground, the chosen dog, and a restart control) standing in for the park.
+The game SHALL leave the start screen and begin gameplay in the park with the dog chosen on the start screen under player control.
 
 #### Scenario: Starting the game
 - **WHEN** the player confirms the selection and starts the game
-- **THEN** gameplay begins in the placeholder scene showing the chosen dog, and no other dog appears
+- **THEN** gameplay begins in the park with the chosen dog under player control, and no other dog appears
 
 #### Scenario: Restarting returns to dog selection
 - **WHEN** the player restarts from within the game
