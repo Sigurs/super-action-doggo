@@ -1,5 +1,8 @@
 # Super Action Doggo
 
+This project is meant as a companion - or a test - project for my own agentic development system.  
+I want to flesh out it's capabilities and this will suit that purpose fine.  
+
 Super Action Doggo is a cozy low-poly 3D browser game about being the best
 dog in the park. It is built with [Three.js](https://threejs.org/) loaded from
 a CDN, ships as a no-build static site, and needs nothing but a plain static
