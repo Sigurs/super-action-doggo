@@ -23,6 +23,8 @@ const GREET_CANCEL_RANGE = 3.4;
 const GREET_CANCEL_SPEED = 0.65;
 const GREET_PLAYER_SECONDS = 1.9;
 const GREET_TURN_RATE = 8;
+const FPS_WINDOW_SECONDS = 0.5;
+const FPS_PLACEHOLDER = '-- FPS';
 
 const wrapAngle = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
 
@@ -52,6 +54,8 @@ export class PlayingState {
     this.greetNpc = null;
     this.greetTimer = 0;
     this.lastMoodPercent = -1;
+    this.fpsFrames = 0;
+    this.fpsWindowStart = 0;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(SKY_COLOR);
@@ -110,6 +114,7 @@ export class PlayingState {
     this.barkBubble = document.getElementById('bark-bubble');
     this.greetPrompt = document.getElementById('greet-prompt');
     this.moodFill = document.getElementById('mood-fill');
+    this.fpsCounter = document.getElementById('fps-counter');
     this.onBack = () => this.game.changeState('start');
   }
 
@@ -189,6 +194,9 @@ export class PlayingState {
     this.camera.updateProjectionMatrix();
 
     this.nameElement.textContent = options.preset.name;
+    this.fpsFrames = 0;
+    this.fpsWindowStart = performance.now();
+    this.fpsCounter.textContent = FPS_PLACEHOLDER;
     this.backButton.addEventListener('click', this.onBack);
     this.canvas.addEventListener('click', this.onCanvasClick);
     this.canvas.addEventListener('mousedown', this.onMouseDown);
@@ -299,6 +307,17 @@ export class PlayingState {
     }
   }
 
+  updateFpsCounter() {
+    this.fpsFrames += 1;
+    const now = performance.now();
+    const elapsed = (now - this.fpsWindowStart) / 1000;
+    if (elapsed >= FPS_WINDOW_SECONDS) {
+      this.fpsCounter.textContent = `${Math.round(this.fpsFrames / elapsed)} FPS`;
+      this.fpsFrames = 0;
+      this.fpsWindowStart = now;
+    }
+  }
+
   updateMoodMeter() {
     const percent = Math.round((this.mood.value / MOOD_MAX) * 100);
     if (percent !== this.lastMoodPercent) {
@@ -326,6 +345,7 @@ export class PlayingState {
       this.positionBarkBubble();
     }
     this.updateMoodMeter();
+    this.updateFpsCounter();
   }
 
   render(renderer) {
