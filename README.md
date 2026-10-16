@@ -3,9 +3,8 @@
 Super Action Doggo is a cozy low-poly 3D browser game about being the best
 dog in the park. It is built with [Three.js](https://threejs.org/) loaded from
 a CDN, ships as a no-build static site, and needs nothing but a plain static
-file server. This is Phase 1, Milestone 1: the start screen with dog
-selection and a placeholder playing scene. The park, dog controls, fetch and
-friends arrive in later milestones.
+file server. This is Phase 1: the dog park with third-person dog control.
+Fetch and friends arrive in later milestones.
 
 **Play:** <https://sigurs.github.io/super-action-doggo/>
 
@@ -15,9 +14,13 @@ friends arrive in later milestones.
 | --- | --- |
 | Select a dog | Click a dog card (or the dog) on the start screen |
 | Start the game | Click **Start as …** |
+| Move | **W A S D** or arrow keys (relative to the camera) |
+| Run | Hold **Shift** while moving |
+| Jump | **Space** (press again only after landing) |
+| Sit | **C** (the dog stays seated until you move) |
+| Bark | **B** |
+| Look around | Move the mouse — click the view to capture the pointer (**Esc** releases it), or drag with the left mouse button |
 | Restart / change dog | Click **Back to start** in the game HUD |
-
-Movement and park controls arrive with the next milestone.
 
 ## Run locally
 
