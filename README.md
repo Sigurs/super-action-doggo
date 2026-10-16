@@ -6,8 +6,10 @@ I want to flesh out it's capabilities and this will suit that purpose fine.
 Super Action Doggo is a cozy low-poly 3D browser game about being the best
 dog in the park. It is built with [Three.js](https://threejs.org/) loaded from
 a CDN, ships as a no-build static site, and needs nothing but a plain static
-file server. This is Phase 1: the dog park with third-person dog control.
-Fetch and friends arrive in later milestones.
+file server. This is Phase 1: a living dog park — wander it with your dog,
+meet the NPC dogs that roam and sniff around, greet them with **E**, get
+petted by strolling visitors (or startle them with a bark), and watch the day
+fade into night and back. Fetch and friends arrive in later milestones.
 
 **Play:** <https://sigurs.github.io/super-action-doggo/>
 
@@ -21,7 +23,8 @@ Fetch and friends arrive in later milestones.
 | Run | Hold **Shift** while moving |
 | Jump | **Space** (press again only after landing) |
 | Sit | **C** (the dog stays seated until you move) |
-| Bark | **B** |
+| Bark | **B** (nearby visitors react) |
+| Greet an NPC dog | **E** when the "Press E to greet" prompt shows (mood rises; each neighbor needs a pause before it counts again) |
 | Look around | Move the mouse — click the view to capture the pointer (**Esc** releases it), or drag with the left mouse button |
 | Restart / change dog | Click **Back to start** in the game HUD |
 
@@ -66,6 +69,12 @@ The game is then live at <https://sigurs.github.io/super-action-doggo/>.
 - Three.js is pinned to an exact version (`0.186.1`) via an import map in
   `index.html`, loaded from jsDelivr. No npm packages, no vendored libraries.
 - All dog models are parameterized assemblies of flat-shaded Three.js
-  primitives (`js/dog-builder.js`) — no external 3D assets.
+  primitives (`js/dog-builder.js`) — no external 3D assets. The same builder
+  makes the NPC dogs; human visitors are box-and-limb figures
+  (`js/visitors.js`).
+- The park feels alive: NPC dogs wander on their own (`js/npc-dogs.js`),
+  visitors stroll, sit on benches and react to your dog, and a day/night
+  cycle drives the lights, sky and fog (`js/day-night.js`) over roughly four
+  real minutes per loop.
 - All local asset references are relative paths, so the site works under the
   GitHub Pages repository subpath.

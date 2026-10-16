@@ -144,6 +144,7 @@ export function createPark() {
   const benchLegGeometry = new THREE.BoxGeometry(0.09, 0.48, 0.45);
   const benchWood = mat(0xa07a4c);
   const benchDark = mat(0x5a4a3a);
+  const benches = [];
   for (const angle of [0.8, 2.35, 3.9, 5.5]) {
     const { x, z } = polar(angle, RING_PATH_OUTER + 1.6);
     const bench = new THREE.Group();
@@ -165,6 +166,8 @@ export function createPark() {
     bench.rotation.y = angle + Math.PI;
     group.add(bench);
     addCollider(x, z, 0.95);
+    // Seat anchor: where a visitor sits, facing the park center with the bench.
+    benches.push({ x, z, yaw: angle + Math.PI });
   }
 
   // Bushes (walk-through decoration)
@@ -249,6 +252,7 @@ export function createPark() {
     group,
     radius: PARK_RADIUS,
     colliders,
+    benches,
     dispose: () => disposePark({ group })
   };
 }

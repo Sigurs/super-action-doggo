@@ -21,7 +21,8 @@ const EASE_RATES = {
   standUp: 12,
   air: 9,
   gait: 6,
-  run: 4
+  run: 4,
+  overlay: 8
 };
 
 const BARK_DURATION = 0.45;
@@ -38,6 +39,8 @@ export class DogAnimator {
     this.runW = 0;
     this.sitW = 0;
     this.airW = 0;
+    this.sniffW = 0;
+    this.greetW = 0;
     this.channels = {
       torsoPitch: 0,
       torsoLift: 0,
@@ -71,6 +74,8 @@ export class DogAnimator {
     const speed = state.speed ?? 0;
     const grounded = state.grounded ?? true;
     const sitting = locomotion === 'sit';
+    const sniffing = locomotion === 'sniff';
+    const greeting = state.greeting === true;
     const moving = speed > 0.35;
     const running = moving && speed > TUNING.walkSpeed * 1.25;
 
@@ -83,6 +88,8 @@ export class DogAnimator {
       dt
     );
     this.airW = this.easeWeight(this.airW, grounded ? 0 : 1, EASE_RATES.air, dt);
+    this.sniffW = this.easeWeight(this.sniffW, sniffing && !moving ? 1 : 0, EASE_RATES.overlay, dt);
+    this.greetW = this.easeWeight(this.greetW, greeting ? 1 : 0, EASE_RATES.overlay, dt);
 
     if (moving) {
       this.phase += dt * (2.6 + speed * 2.2);
@@ -109,16 +116,21 @@ export class DogAnimator {
     this.easeChannel('backRight',
       this.sitW * hindFold + this.airW * -1.0, EASE_RATES.legs, dt);
 
-    const tailAmpTarget = lerp(
+    const sitAir = Math.max(this.sitW, this.airW);
+    let tailAmpTarget = lerp(
       lerp(0.55, lerp(0.45, 0.5, this.runW), this.gaitW),
-      Math.max(this.sitW, this.airW) * 0.38,
-      Math.max(this.sitW, this.airW)
+      sitAir * 0.38,
+      sitAir
     );
-    const tailSpeedTarget = lerp(
+    let tailSpeedTarget = lerp(
       lerp(6, lerp(5.2, 8.5, this.runW), this.gaitW),
       4.5,
       this.sitW
     );
+    tailAmpTarget = lerp(tailAmpTarget, 0.3, this.sniffW);
+    tailSpeedTarget = lerp(tailSpeedTarget, 3.4, this.sniffW);
+    tailAmpTarget = lerp(tailAmpTarget, 0.85, this.greetW);
+    tailSpeedTarget = lerp(tailSpeedTarget, 11, this.greetW);
     this.easeChannel('tailAmp', tailAmpTarget, EASE_RATES.torso, dt);
     this.easeChannel('tailSpeed', tailSpeedTarget, EASE_RATES.torso, dt);
     this.tailPhase += dt * this.channels.tailSpeed;
@@ -152,12 +164,18 @@ export class DogAnimator {
     const breathe = Math.sin(this.elapsed * 2.4) * 0.02 * (1 - this.gaitW) * (1 - this.sitW * 0.4);
     const idleHead = Math.sin(this.elapsed * 2.4 + 0.9) * 0.05 * (1 - this.gaitW);
     const barkEnv = this.barkTimer > 0 ? this.barkTimer / BARK_DURATION : 0;
+    const sniffBob = Math.sin(this.elapsed * 7.2) * 0.1 * this.sniffW;
+    const sniffDip = (0.58 + sniffBob) * this.sniffW;
+    const greetDip = 0.3 * this.greetW;
 
     const c = this.channels;
     const parts = this.parts;
-    parts.torso.rotation.x = c.torsoPitch + pitchOsc - 0.09 * barkEnv;
-    parts.torso.position.y = parts.torso.userData.baseY + c.torsoLift + liftOsc + breathe;
-    parts.head.rotation.x = c.headPitch + headOsc + idleHead - 0.55 * barkEnv;
+    parts.torso.rotation.x = c.torsoPitch + pitchOsc - 0.09 * barkEnv
+      + 0.13 * this.sniffW + 0.05 * this.greetW;
+    parts.torso.position.y = parts.torso.userData.baseY + c.torsoLift + liftOsc + breathe
+      - 0.07 * this.sniffW - 0.02 * this.greetW;
+    parts.head.rotation.x = c.headPitch + headOsc + idleHead - 0.55 * barkEnv
+      + sniffDip + greetDip;
     parts.tail.rotation.y = Math.sin(this.tailPhase) * c.tailAmp;
 
     for (const name of ['frontLeft', 'frontRight', 'backLeft', 'backRight']) {

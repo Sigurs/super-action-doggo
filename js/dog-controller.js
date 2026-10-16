@@ -1,3 +1,5 @@
+import { applyParkClamp } from './park-clamp.js';
+
 export const TUNING = {
   walkSpeed: 2.2,
   runSpeed: 4.5,
@@ -5,8 +7,7 @@ export const TUNING = {
   jumpVelocity: 4.5,
   acceleration: 10,
   turnRate: 11,
-  dogRadius: 0.34,
-  boundaryMargin: 0.6
+  dogRadius: 0.34
 };
 
 const MOVEMENT_CODES = {
@@ -26,7 +27,8 @@ const GAME_CODES = new Set([
   'ShiftLeft',
   'ShiftRight',
   'KeyC',
-  'KeyB'
+  'KeyB',
+  'KeyE'
 ]);
 
 const wrapAngle = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -34,11 +36,11 @@ const wrapAngle = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
 export class DogController {
   constructor(dog, park) {
     this.dog = dog;
-    this.radius = park.radius;
-    this.colliders = park.colliders;
+    this.park = park;
     this.keys = new Set();
     this.jumpQueued = false;
     this.barkQueued = false;
+    this.greetQueued = false;
     this.attached = false;
     this.onKeyDown = (event) => {
       if (!GAME_CODES.has(event.code)) {
@@ -54,6 +56,9 @@ export class DogController {
       }
       if (event.code === 'KeyB') {
         this.barkQueued = true;
+      }
+      if (event.code === 'KeyE') {
+        this.greetQueued = true;
       }
       if (event.code === 'KeyC' && this.grounded) {
         this.sitting = true;
@@ -72,6 +77,7 @@ export class DogController {
     this.keys.clear();
     this.jumpQueued = false;
     this.barkQueued = false;
+    this.greetQueued = false;
     this.x = 0;
     this.y = 0;
     this.z = 0;
@@ -106,6 +112,7 @@ export class DogController {
     this.keys.clear();
     this.jumpQueued = false;
     this.barkQueued = false;
+    this.greetQueued = false;
     this.attached = false;
   }
 
@@ -113,6 +120,12 @@ export class DogController {
     const barked = this.barkQueued;
     this.barkQueued = false;
     return barked;
+  }
+
+  consumeGreet() {
+    const greeted = this.greetQueued;
+    this.greetQueued = false;
+    return greeted;
   }
 
   readMovementInput() {
@@ -181,24 +194,7 @@ export class DogController {
     this.z += this.vz * dt;
     this.speed = Math.hypot(this.vx, this.vz);
 
-    const maxRadius = this.radius - TUNING.boundaryMargin;
-    const distance = Math.hypot(this.x, this.z);
-    if (distance > maxRadius) {
-      this.x = (this.x / distance) * maxRadius;
-      this.z = (this.z / distance) * maxRadius;
-    }
-
-    for (const collider of this.colliders) {
-      const dx = this.x - collider.x;
-      const dz = this.z - collider.z;
-      const minDistance = collider.radius + TUNING.dogRadius;
-      const squared = dx * dx + dz * dz;
-      if (squared < minDistance * minDistance && squared > 1e-8) {
-        const actual = Math.sqrt(squared);
-        this.x = collider.x + (dx / actual) * minDistance;
-        this.z = collider.z + (dz / actual) * minDistance;
-      }
-    }
+    applyParkClamp(this, TUNING.dogRadius, this.park);
 
     if (this.speed > 0.2) {
       const targetYaw = Math.atan2(this.vx, this.vz);

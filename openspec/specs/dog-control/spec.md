@@ -57,4 +57,4 @@ A bark input SHALL make the dog perform a clearly visible bark, shown through it
 
 #### Scenario: Barking
 - **WHEN** the player presses the bark input
-- **THEN** the dog plays a bark animation with a visible on-screen cue
+- **THEN** the dog plays a bark animation with a visible cue, and any nearby park visitors react
