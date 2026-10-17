@@ -4,7 +4,7 @@ Verification is manual — serve the site with any plain static file server and 
 
 ## 1. Needs foundation
 
-- [ ] 1.1 Implement `js/needs.js` (`createNeeds()` with clamped 0–100 mood and energy, per-frame `update(dt, activity)`, `gain(amount, reason)`, `canRunJump()` with the empty→low-threshold hysteresis) exporting the single `TUNING` table from design FD4; delete `js/mood.js` and rewire `js/states/playing.js` and `js/visitors.js` greet/pet gains to read `moodGainGreet`/`moodGainPet` from it; verify the mood meter still rises on greeting and petting exactly as before and the game console shows no errors
+- [x] 1.1 Implement `js/needs.js` (`createNeeds()` with clamped 0–100 mood and energy, per-frame `update(dt, activity)`, `gain(amount, reason)`, `canRunJump()` with the empty→low-threshold hysteresis) exporting the single `TUNING` table from design FD4; delete `js/mood.js` and rewire `js/states/playing.js` and `js/visitors.js` greet/pet gains to read `moodGainGreet`/`moodGainPet` from it; verify the mood meter still rises on greeting and petting exactly as before and the game console shows no errors
 - [ ] 1.2 Add the energy meter pill above the mood meter in `index.html`/`css/style.css` (same track/fill pattern, cool color) and drive both from the playing state's percent-diff update; verify the dog-needs "Checking the meters" scenario — both meters visible during play, reading between empty and full
 
 ## 2. Energy drain, recovery and gating

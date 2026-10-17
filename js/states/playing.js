@@ -4,7 +4,7 @@ import { createPark } from '../park-builder.js';
 import { CameraRig } from '../camera-rig.js';
 import { DogController } from '../dog-controller.js';
 import { DogAnimator } from '../anim.js';
-import { createMood, MOOD_MAX } from '../mood.js';
+import { createNeeds, TUNING as NEEDS_TUNING } from '../needs.js';
 import { createNpcDogs } from '../npc-dogs.js';
 import { createVisitors } from '../visitors.js';
 import { createDayNight } from '../day-night.js';
@@ -15,7 +15,6 @@ const FOG_FAR = 70;
 const ENABLE_SHADOWS = true;
 const BARK_TEXT = 'Woof!';
 const BARK_VISIBLE_SECONDS = 0.55;
-const GREET_MOOD_GAIN = 8;
 const GREET_PROMPT_RANGE = 2.2;
 const GREET_PROMPT_HIDE_RANGE = 2.6;
 const GREET_TRIGGER_RANGE = 2.5;
@@ -88,9 +87,9 @@ export class PlayingState {
     this.npcDogs = createNpcDogs(this.park);
     this.scene.add(this.npcDogs.group);
 
-    this.mood = createMood();
+    this.needs = createNeeds();
     this.visitors = createVisitors(this.park, {
-      onMoodGain: (amount) => this.mood.gain(amount)
+      onMoodGain: (amount) => this.needs.mood.gain(amount)
     });
     this.scene.add(this.visitors.group);
 
@@ -181,7 +180,7 @@ export class PlayingState {
     this.animator = new DogAnimator(this.dog);
     this.rig.reset(0, 0);
 
-    this.mood = createMood();
+    this.needs = createNeeds();
     this.lastMoodPercent = -1;
     this.npcDogs.reset();
     this.visitors.reset();
@@ -298,7 +297,7 @@ export class PlayingState {
       if (npc) {
         const counts = this.npcDogs.tryGreet(npc);
         if (counts) {
-          this.mood.gain(GREET_MOOD_GAIN);
+          this.needs.mood.gain(NEEDS_TUNING.moodGainGreet, 'greet');
         }
         this.greetNpc = npc;
         this.greetTimer = GREET_PLAYER_SECONDS;
@@ -319,7 +318,7 @@ export class PlayingState {
   }
 
   updateMoodMeter() {
-    const percent = Math.round((this.mood.value / MOOD_MAX) * 100);
+    const percent = Math.round(this.needs.mood.value);
     if (percent !== this.lastMoodPercent) {
       this.moodFill.style.width = `${percent}%`;
       this.lastMoodPercent = percent;

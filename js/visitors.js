@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { TUNING as NEEDS_TUNING } from './needs.js';
 
 const TUNE = {
   walkSpeed: 1.35,
@@ -19,7 +20,6 @@ const TUNE = {
   petCalmTime: 1.2,
   petDuration: 2.3,
   petCooldown: 25,
-  petMoodGain: 10,
   startleRange: 6,
   startleDuration: 0.95,
   startleStep: 0.55
@@ -316,7 +316,7 @@ export function createVisitors(park, { onMoodGain }) {
         visitor.reactionTimer = TUNE.petDuration;
         if (visitor.petCooldown <= 0) {
           visitor.petCooldown = TUNE.petCooldown;
-          onMoodGain(TUNE.petMoodGain);
+          onMoodGain(NEEDS_TUNING.moodGainPet);
         }
       }
     }
