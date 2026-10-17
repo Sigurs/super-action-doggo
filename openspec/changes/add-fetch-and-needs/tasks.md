@@ -23,7 +23,7 @@ Verification is manual — serve the site with any plain static file server and 
 
 - [x] 4.1 Implement pick-up and carry per design FD3: a resting ball within ~0.9 m of the dog re-parents to the head/snout anchor with the grab head-dip overlay; verify the fetch-play "Reaching the ball" scenario — steering up to the resting ball makes the dog visibly carry it in its mouth (including while walking/running around)
 - [x] 4.2 Implement the return drop per design FD3: when the carrying dog comes within ~1.5 m of the recorded throw origin the ball drops at the dog's feet back into `resting`, with the drop head-dip; verify the fetch-play "Returning the ball" scenario — the dropped ball is immediately throwable, and a throw→fetch→return cycle can repeat indefinitely without page reload or console errors
-- [ ] 4.3 Fire `mood.gain(TUNING.moodGainFetch, 'fetch')` when the ball drops at the throw origin, and apply the always-on `moodDecay` in the needs update; verify the dog-needs "Playing fetch" scenario (mood meter rises on each completed return) and "A boring stretch" scenario (idling/wandering for a long stretch slowly lowers the meter)
+- [x] 4.3 Fire `mood.gain(TUNING.moodGainFetch, 'fetch')` when the ball drops at the throw origin, and apply the always-on `moodDecay` in the needs update; verify the dog-needs "Playing fetch" scenario (mood meter rises on each completed return) and "A boring stretch" scenario (idling/wandering for a long stretch slowly lowers the meter)
 
 ## 5. Documentation
 

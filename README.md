@@ -8,8 +8,11 @@ dog in the park. It is built with [Three.js](https://threejs.org/) loaded from
 a CDN, ships as a no-build static site, and needs nothing but a plain static
 file server. This is Phase 1: a living dog park — wander it with your dog,
 meet the NPC dogs that roam and sniff around, greet them with **E**, get
-petted by strolling visitors (or startle them with a bark), and watch the day
-fade into night and back. Fetch and friends arrive in later milestones.
+petted by strolling visitors (or startle them with a bark), play fetch by
+throwing a ball with the mouse and bringing it back, and watch the day fade
+into night and back. Keep an eye on the mood and energy meters: running and
+jumping tire the dog out, and an exhausted dog walks until it rests, while
+fetch, greetings and petting keep its mood up.
 
 **Play:** <https://sigurs.github.io/super-action-doggo/>
 
