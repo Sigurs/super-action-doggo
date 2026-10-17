@@ -149,7 +149,7 @@ body {
 }
 
 .hud-strip {
-  position: absolute;
+  position: relative;
   top: 0;
   left: 0;
   right: 0;
@@ -182,6 +182,21 @@ body {
 
 #back-to-start:hover {
   background: rgba(255, 255, 255, 0.28);
+}
+
+#fps-counter {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 1.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(38, 48, 59, 0.55);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 #lock-hint {
