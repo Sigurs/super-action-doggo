@@ -205,6 +205,9 @@ export class PlayingState {
 
   enter(options = {}) {
     this.elapsed = 0;
+    // Re-parent the ball out of the old dog's head before the dog (and any
+    // carried mesh with it) is disposed.
+    this.ball.reset();
     if (this.dog) {
       this.scene.remove(this.dog);
       disposeDog(this.dog);
@@ -251,6 +254,8 @@ export class PlayingState {
 
   exit() {
     this.controller.detach();
+    this.cancelCharge();
+    this.ball.reset();
     this.backButton.removeEventListener('click', this.onBack);
     this.canvas.removeEventListener('click', this.onCanvasClick);
     this.canvas.removeEventListener('mousedown', this.onMouseDown);
@@ -360,6 +365,94 @@ export class PlayingState {
     }
   }
 
+  startCharge() {
+    this.charging = true;
+    this.chargeElapsed = 0;
+    this.chargeFill.style.width = '0%';
+  }
+
+  cancelCharge() {
+    if (!this.charging) {
+      return;
+    }
+    this.charging = false;
+    this.chargeBar.classList.add('hidden');
+  }
+
+  chargeStrength(held) {
+    const t = Math.min(1, held / THROW_CHARGE_SECONDS);
+    return t * t * (3 - 2 * t);
+  }
+
+  throwBall(strength) {
+    const speed = THROW_MIN_SPEED + (THROW_MAX_SPEED - THROW_MIN_SPEED) * strength;
+    // Aim along the camera: horizontal bearing from the rig's yaw, launch
+    // elevation easing down as the camera pitches further down.
+    const elevation = Math.max(0.18, Math.min(0.75, 0.62 - this.rig.pitch * 0.2));
+    const cosE = Math.cos(elevation);
+    const dirX = -Math.sin(this.rig.yaw) * cosE;
+    const dirY = Math.sin(elevation);
+    const dirZ = -Math.cos(this.rig.yaw) * cosE;
+    this.dog.userData.parts.head.getWorldPosition(this.headPosition);
+    this.ball.throw(
+      this.headPosition.x,
+      this.headPosition.y + THROW_LAUNCH_LIFT,
+      this.headPosition.z,
+      dirX,
+      dirY,
+      dirZ,
+      speed,
+      this.controller.x,
+      this.controller.z
+    );
+  }
+
+  updateCharge(dt) {
+    if (!this.charging) {
+      return;
+    }
+    this.chargeElapsed += dt;
+    const strength = this.chargeStrength(this.chargeElapsed);
+    this.chargeFill.style.width = `${Math.round(strength * 100)}%`;
+    // Only surface the bar once the hold is long enough that it can throw,
+    // so orbit drags and the pointer-lock click never flash it.
+    this.chargeBar.classList.toggle(
+      'hidden',
+      this.chargeElapsed < THROW_MIN_HOLD
+    );
+  }
+
+  carryOffset() {
+    const headSize = this.dog.userData.params.headSize;
+    const snoutScale = this.dog.userData.params.snoutScale;
+    const snoutTip = headSize * 0.4 + headSize * 0.5 * snoutScale;
+    return { y: -headSize * 0.16, z: snoutTip + 0.08 };
+  }
+
+  updateFetch() {
+    if (this.ball.state === 'resting' && this.ball.fetchActive) {
+      const dx = this.ball.x - this.controller.x;
+      const dz = this.ball.z - this.controller.z;
+      if (dx * dx + dz * dz < FETCH_PICKUP_RANGE * FETCH_PICKUP_RANGE) {
+        const offset = this.carryOffset();
+        this.ball.carry(this.dog.userData.parts.head, offset.y, offset.z);
+        this.animator.triggerCarryDip();
+      }
+    } else if (this.ball.state === 'carried') {
+      const origin = this.ball.throwOrigin;
+      const dx = origin.x - this.controller.x;
+      const dz = origin.z - this.controller.z;
+      if (dx * dx + dz * dz < FETCH_DROP_RANGE * FETCH_DROP_RANGE) {
+        this.ball.drop(
+          this.controller.x + Math.sin(this.controller.yaw) * FETCH_DROP_FORWARD,
+          this.controller.z + Math.cos(this.controller.yaw) * FETCH_DROP_FORWARD
+        );
+        this.animator.triggerCarryDip();
+        this.needs.mood.gain(NEEDS_TUNING.moodGainFetch, 'fetch');
+      }
+    }
+  }
+
   activityFor(jumped) {
     if (jumped) {
       return 'jump';
@@ -399,6 +492,8 @@ export class PlayingState {
     this.npcDogs.update(dt, this.controller);
     this.visitors.update(dt, this.controller);
     this.updateGreet(dt);
+    this.updateCharge(dt);
+    this.ball.update(dt);
     this.dayNight.update(dt);
     this.controller.greeting = this.greetNpc !== null;
     this.animator.update(dt, this.controller);

@@ -26,6 +26,7 @@ const EASE_RATES = {
 };
 
 const BARK_DURATION = 0.45;
+const CARRY_DIP_DURATION = 0.5;
 
 export class DogAnimator {
   constructor(dog) {
@@ -35,6 +36,7 @@ export class DogAnimator {
     this.phase = 0;
     this.tailPhase = 0;
     this.barkTimer = 0;
+    this.carryDipTimer = 0;
     this.gaitW = 0;
     this.runW = 0;
     this.sitW = 0;
@@ -58,6 +60,10 @@ export class DogAnimator {
     this.barkTimer = BARK_DURATION;
   }
 
+  triggerCarryDip() {
+    this.carryDipTimer = CARRY_DIP_DURATION;
+  }
+
   easeWeight(weight, target, rate, dt) {
     return lerp(weight, target, 1 - Math.exp(-rate * dt));
   }
@@ -69,6 +75,7 @@ export class DogAnimator {
   update(dt, state = {}) {
     this.elapsed += dt;
     this.barkTimer = Math.max(0, this.barkTimer - dt);
+    this.carryDipTimer = Math.max(0, this.carryDipTimer - dt);
 
     const locomotion = state.locomotion ?? 'idle';
     const speed = state.speed ?? 0;
@@ -164,6 +171,8 @@ export class DogAnimator {
     const breathe = Math.sin(this.elapsed * 2.4) * 0.02 * (1 - this.gaitW) * (1 - this.sitW * 0.4);
     const idleHead = Math.sin(this.elapsed * 2.4 + 0.9) * 0.05 * (1 - this.gaitW);
     const barkEnv = this.barkTimer > 0 ? this.barkTimer / BARK_DURATION : 0;
+    const carryDipEnv = this.carryDipTimer > 0 ? this.carryDipTimer / CARRY_DIP_DURATION : 0;
+    const carryDip = (0.32 + Math.sin(this.carryDipTimer * 18) * 0.06) * carryDipEnv;
     const sniffBob = Math.sin(this.elapsed * 7.2) * 0.1 * this.sniffW;
     const sniffDip = (0.58 + sniffBob) * this.sniffW;
     const greetDip = 0.3 * this.greetW;
@@ -175,7 +184,7 @@ export class DogAnimator {
     parts.torso.position.y = parts.torso.userData.baseY + c.torsoLift + liftOsc + breathe
       - 0.07 * this.sniffW - 0.02 * this.greetW;
     parts.head.rotation.x = c.headPitch + headOsc + idleHead - 0.55 * barkEnv
-      + sniffDip + greetDip;
+      + sniffDip + greetDip + carryDip;
     parts.tail.rotation.y = Math.sin(this.tailPhase) * c.tailAmp;
 
     for (const name of ['frontLeft', 'frontRight', 'backLeft', 'backRight']) {
