@@ -31,6 +31,9 @@ const THROW_MIN_SPEED = 6;
 const THROW_MAX_SPEED = 16;
 const THROW_STATIONARY_PX = 8; // unlocked drag beyond this cancels charging
 const THROW_LAUNCH_LIFT = 0.25; // above the head anchor
+const FETCH_PICKUP_RANGE = 0.9; // dog center to resting ball
+const FETCH_DROP_RANGE = 1.5; // carrying dog to throw origin
+const FETCH_DROP_FORWARD = 0.5; // how far in front of the dog the ball lands
 
 const wrapAngle = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
 
@@ -494,6 +497,7 @@ export class PlayingState {
     this.updateGreet(dt);
     this.updateCharge(dt);
     this.ball.update(dt);
+    this.updateFetch();
     this.dayNight.update(dt);
     this.controller.greeting = this.greetNpc !== null;
     this.animator.update(dt, this.controller);
