@@ -5,6 +5,7 @@ import { CameraRig } from '../camera-rig.js';
 import { DogController } from '../dog-controller.js';
 import { DogAnimator } from '../anim.js';
 import { createNeeds, TUNING as NEEDS_TUNING } from '../needs.js';
+import { createBall } from '../ball.js';
 import { createNpcDogs } from '../npc-dogs.js';
 import { createVisitors } from '../visitors.js';
 import { createDayNight } from '../day-night.js';
@@ -24,6 +25,12 @@ const GREET_PLAYER_SECONDS = 1.9;
 const GREET_TURN_RATE = 8;
 const FPS_WINDOW_SECONDS = 0.5;
 const FPS_PLACEHOLDER = '-- FPS';
+const THROW_CHARGE_SECONDS = 1.2;
+const THROW_MIN_HOLD = 0.2; // holds shorter than this never throw
+const THROW_MIN_SPEED = 6;
+const THROW_MAX_SPEED = 16;
+const THROW_STATIONARY_PX = 8; // unlocked drag beyond this cancels charging
+const THROW_LAUNCH_LIFT = 0.25; // above the head anchor
 
 const wrapAngle = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
 
@@ -56,6 +63,10 @@ export class PlayingState {
     this.lastEnergyPercent = -1;
     this.fpsFrames = 0;
     this.fpsWindowStart = 0;
+    this.charging = false;
+    this.chargeElapsed = 0;
+    this.chargeAnchorX = 0;
+    this.chargeAnchorY = 0;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(SKY_COLOR);
@@ -87,6 +98,8 @@ export class PlayingState {
 
     this.npcDogs = createNpcDogs(this.park);
     this.scene.add(this.npcDogs.group);
+
+    this.ball = createBall(this.scene, this.park);
 
     this.needs = createNeeds();
     this.visitors = createVisitors(this.park, {
@@ -135,14 +148,32 @@ export class PlayingState {
       }
     };
     this.onMouseDown = (event) => {
-      if (event.button === 0 && document.pointerLockElement !== this.canvas) {
+      if (event.button !== 0) {
+        return;
+      }
+      if (document.pointerLockElement === this.canvas) {
+        // Locked: any left-button hold charges a throw.
+        this.startCharge();
+      } else {
         this.dragging = true;
         this.lastPointerX = event.clientX;
         this.lastPointerY = event.clientY;
+        // Unlocked: a stationary hold charges; a drag cancels it below.
+        this.chargeAnchorX = event.clientX;
+        this.chargeAnchorY = event.clientY;
+        this.startCharge();
       }
     };
-    this.onMouseUp = () => {
-      this.dragging = false;
+    this.onMouseUp = (event) => {
+      const wasCharging = this.charging;
+      const held = this.chargeElapsed;
+      this.cancelCharge();
+      if (event.button === 0) {
+        this.dragging = false;
+      }
+      if (wasCharging && held >= THROW_MIN_HOLD) {
+        this.throwBall(this.chargeStrength(held));
+      }
     };
     this.onMouseMove = (event) => {
       if (document.pointerLockElement === this.canvas) {
@@ -154,6 +185,13 @@ export class PlayingState {
         );
         this.lastPointerX = event.clientX;
         this.lastPointerY = event.clientY;
+        if (this.charging) {
+          const dx = event.clientX - this.chargeAnchorX;
+          const dy = event.clientY - this.chargeAnchorY;
+          if (Math.hypot(dx, dy) > THROW_STATIONARY_PX) {
+            this.cancelCharge();
+          }
+        }
       }
     };
     this.onPointerLockChange = () => this.updateLockHint();
