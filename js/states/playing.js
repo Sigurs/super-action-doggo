@@ -53,6 +53,7 @@ export class PlayingState {
     this.greetNpc = null;
     this.greetTimer = 0;
     this.lastMoodPercent = -1;
+    this.lastEnergyPercent = -1;
     this.fpsFrames = 0;
     this.fpsWindowStart = 0;
 
@@ -113,6 +114,9 @@ export class PlayingState {
     this.barkBubble = document.getElementById('bark-bubble');
     this.greetPrompt = document.getElementById('greet-prompt');
     this.moodFill = document.getElementById('mood-fill');
+    this.energyFill = document.getElementById('energy-fill');
+    this.chargeBar = document.getElementById('charge-bar');
+    this.chargeFill = document.getElementById('charge-fill');
     this.fpsCounter = document.getElementById('fps-counter');
     this.onBack = () => this.game.changeState('start');
   }
@@ -182,6 +186,7 @@ export class PlayingState {
 
     this.needs = createNeeds();
     this.lastMoodPercent = -1;
+    this.lastEnergyPercent = -1;
     this.npcDogs.reset();
     this.visitors.reset();
     this.dayNight.reset();
@@ -317,17 +322,37 @@ export class PlayingState {
     }
   }
 
-  updateMoodMeter() {
-    const percent = Math.round(this.needs.mood.value);
-    if (percent !== this.lastMoodPercent) {
-      this.moodFill.style.width = `${percent}%`;
-      this.lastMoodPercent = percent;
+  activityFor(jumped) {
+    if (jumped) {
+      return 'jump';
+    }
+    const locomotion = this.controller.locomotion;
+    if (locomotion === 'jump') {
+      // Airborne frames after the launch: the jump chunk already paid for it.
+      return 'air';
+    }
+    return locomotion;
+  }
+
+  updateMeters() {
+    const moodPercent = Math.round(this.needs.mood.value);
+    if (moodPercent !== this.lastMoodPercent) {
+      this.moodFill.style.width = `${moodPercent}%`;
+      this.lastMoodPercent = moodPercent;
+    }
+    const energyPercent = Math.round(this.needs.energy.value);
+    if (energyPercent !== this.lastEnergyPercent) {
+      this.energyFill.style.width = `${energyPercent}%`;
+      this.lastEnergyPercent = energyPercent;
     }
   }
 
   update(dt) {
     this.elapsed += dt;
-    this.controller.update(dt, this.rig.yaw);
+    const wasGrounded = this.controller.grounded;
+    this.controller.update(dt, this.rig.yaw, this.needs.canRunJump());
+    const jumped = wasGrounded && !this.controller.grounded;
+    this.needs.update(dt, this.activityFor(jumped));
     if (this.controller.consumeBark()) {
       this.animator.triggerBark();
       this.showBarkBubble();
@@ -343,7 +368,7 @@ export class PlayingState {
     if (this.elapsed < this.barkVisibleUntil) {
       this.positionBarkBubble();
     }
-    this.updateMoodMeter();
+    this.updateMeters();
     this.updateFpsCounter();
   }
 
