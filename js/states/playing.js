@@ -429,7 +429,7 @@ export class PlayingState {
     const headSize = this.dog.userData.params.headSize;
     const snoutScale = this.dog.userData.params.snoutScale;
     const snoutTip = headSize * 0.4 + headSize * 0.5 * snoutScale;
-    return { y: -headSize * 0.16, z: snoutTip + 0.08 };
+    return { y: -headSize * 0.34, z: snoutTip + 0.02 };
   }
 
   updateFetch() {
@@ -500,7 +500,13 @@ export class PlayingState {
     this.updateFetch();
     this.dayNight.update(dt);
     this.controller.greeting = this.greetNpc !== null;
-    this.animator.update(dt, this.controller);
+    this.animator.update(dt, {
+      locomotion: this.controller.locomotion,
+      speed: this.controller.speed,
+      grounded: this.controller.grounded,
+      greeting: this.greetNpc !== null,
+      carrying: this.ball.state === 'carried'
+    });
     this.rig.update(dt, this.dog.position);
     if (this.elapsed < this.barkVisibleUntil) {
       this.positionBarkBubble();

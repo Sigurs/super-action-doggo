@@ -31,8 +31,8 @@ Verification is manual — serve the site with any plain static file server and 
 
 ## 6. Milestone verification
 
-- [ ] 6.1 Walk every scenario in this change's `specs/fetch-play/spec.md` and `specs/dog-needs/spec.md` against a local static server in a desktop browser, including a repeated throw→fetch→return cycle; fix anything that fails until each passes by manual check
-- [ ] 6.2 Play the integration loop with the whole park — select dog, explore, run until exhausted and recover, fetch repeatedly, greet an NPC dog, be petted, bark at visitors, watch dusk fall — and verify a smooth frame rate with no console errors or visible hitches; if frame rate dips, tune per the design's notes (the ball adds one shadow caster at most)
+- [x] 6.1 Walk every scenario in this change's `specs/fetch-play/spec.md` and `specs/dog-needs/spec.md` against a local static server in a desktop browser, including a repeated throw→fetch→return cycle; fix anything that fails until each passes by manual check
+- [x] 6.2 Play the integration loop with the whole park — select dog, explore, run until exhausted and recover, fetch repeatedly, greet an NPC dog, be petted, bark at visitors, watch dusk fall — and verify a smooth frame rate with no console errors or visible hitches; if frame rate dips, tune per the design's notes (the ball adds one shadow caster at most)
 
 ## Workflow follow-up
 

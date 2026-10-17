@@ -43,6 +43,7 @@ export class DogAnimator {
     this.airW = 0;
     this.sniffW = 0;
     this.greetW = 0;
+    this.carryW = 0;
     this.channels = {
       torsoPitch: 0,
       torsoLift: 0,
@@ -83,6 +84,7 @@ export class DogAnimator {
     const sitting = locomotion === 'sit';
     const sniffing = locomotion === 'sniff';
     const greeting = state.greeting === true;
+    const carrying = state.carrying === true;
     const moving = speed > 0.35;
     const running = moving && speed > TUNING.walkSpeed * 1.25;
 
@@ -97,6 +99,7 @@ export class DogAnimator {
     this.airW = this.easeWeight(this.airW, grounded ? 0 : 1, EASE_RATES.air, dt);
     this.sniffW = this.easeWeight(this.sniffW, sniffing && !moving ? 1 : 0, EASE_RATES.overlay, dt);
     this.greetW = this.easeWeight(this.greetW, greeting ? 1 : 0, EASE_RATES.overlay, dt);
+    this.carryW = this.easeWeight(this.carryW, carrying ? 1 : 0, EASE_RATES.overlay, dt);
 
     if (moving) {
       this.phase += dt * (2.6 + speed * 2.2);
@@ -113,8 +116,7 @@ export class DogAnimator {
     this.easeChannel('torsoLift',
       this.sitW * -sitDrop, EASE_RATES.torso, dt);
     this.easeChannel('headPitch',
-      this.sitW * -0.18 + this.airW * -0.15, EASE_RATES.head, dt);
-    this.easeChannel('frontLeft',
+      this.sitW * -0.18 + this.airW * -0.15, EASE_RATES.head, dt);    this.easeChannel('frontLeft',
       this.sitW * 0.15 + this.airW * 0.9, EASE_RATES.legs, dt);
     this.easeChannel('frontRight',
       this.sitW * 0.15 + this.airW * 0.9, EASE_RATES.legs, dt);
@@ -184,7 +186,7 @@ export class DogAnimator {
     parts.torso.position.y = parts.torso.userData.baseY + c.torsoLift + liftOsc + breathe
       - 0.07 * this.sniffW - 0.02 * this.greetW;
     parts.head.rotation.x = c.headPitch + headOsc + idleHead - 0.55 * barkEnv
-      + sniffDip + greetDip + carryDip;
+      + sniffDip + greetDip + carryDip + 0.26 * this.carryW;
     parts.tail.rotation.y = Math.sin(this.tailPhase) * c.tailAmp;
 
     for (const name of ['frontLeft', 'frontRight', 'backLeft', 'backRight']) {
