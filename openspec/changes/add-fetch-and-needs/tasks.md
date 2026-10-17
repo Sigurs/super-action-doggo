@@ -10,7 +10,7 @@ Verification is manual — serve the site with any plain static file server and 
 ## 2. Energy drain, recovery and gating
 
 - [x] 2.1 Apply the energy rates each frame in the needs update (drain while `run`, chunk per fired jump, recover idle/walk/sit) and pass the activity from the playing state; verify the dog-needs "Tiring the dog out" and "Recovering energy" scenarios — repeated running/jumping visibly empties the meter, standing or walking refills it
-- [ ] 2.2 Gate the controller per design FD5: `DogController.update` accepts the `canRunJump()` verdict; while gated the run modifier is ignored (walk-speed cap, walk gait shows) and queued jumps are consumed without firing, until energy recovers past `energyLowThreshold`; verify the dog-needs "Exhausted dog" scenario — at empty the dog walks and cannot jump no matter the inputs, then runs again after recovery
+- [x] 2.2 Gate the controller per design FD5: `DogController.update` accepts the `canRunJump()` verdict; while gated the run modifier is ignored (walk-speed cap, walk gait shows) and queued jumps are consumed without firing, until energy recovers past `energyLowThreshold`; verify the dog-needs "Exhausted dog" scenario — at empty the dog walks and cannot jump no matter the inputs, then runs again after recovery
 - [ ] 2.3 Failsafe check: with meters pinned at their limits (run mood-raising activities at full mood; drain energy to empty and keep holding inputs), verify the dog-needs "Holding at full mood" scenario and that neither meter ever displays past empty or full
 
 ## 3. Ball and throw
