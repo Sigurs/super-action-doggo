@@ -154,8 +154,9 @@ function buildHead(params) {
 function buildLegs(params) {
   const legs = new THREE.Group();
   const legHeight = params.legLength + params.bodyHeight * 0.35;
-  const legGeometry = new THREE.CylinderGeometry(params.legRadius, params.legRadius * 1.08, legHeight, 7);
-  const pawGeometry = new THREE.SphereGeometry(params.legRadius * 1.35, 7, 5);
+  const legColumnHeight = legHeight - params.legRadius * 0.6;
+  const legGeometry = new THREE.CylinderGeometry(params.legRadius, params.legRadius * 1.08, legColumnHeight, 7);
+  const pawGeometry = new THREE.SphereGeometry(params.legRadius * 1.45, 7, 5);
   const pivots = {};
   const legNames = {
     '1,1': 'frontLeft',
@@ -174,7 +175,7 @@ function buildLegs(params) {
       pivot.userData.baseX = x;
       pivot.userData.baseZ = z;
       const leg = new THREE.Mesh(legGeometry, material(params.bodyColor));
-      leg.position.set(0, -legHeight / 2, 0);
+      leg.position.set(0, -legColumnHeight / 2, 0);
       const paw = new THREE.Mesh(pawGeometry, material(params.bellyColor));
       paw.scale.set(1, 0.75, 1.15);
       paw.position.set(0, -(legHeight - params.legRadius * 0.6), zSide * params.legRadius * 0.3);
