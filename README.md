@@ -27,6 +27,7 @@ fetch, greetings and petting keep its mood up.
 | Jump | **Space** (press again only after landing) |
 | Sit | **C** (the dog stays seated until you move) |
 | Bark | **B** (nearby visitors react) |
+| Throw the ball | Hold the **left mouse button** to charge, release to throw where you aim — hold longer to throw farther. Only one ball is in play: throwing again replaces it. Steer your dog over the resting ball to pick it up, then guide it back near where you threw from to drop it for another round |
 | Greet an NPC dog | **E** when the "Press E to greet" prompt shows (mood rises; each neighbor needs a pause before it counts again) |
 | Look around | Move the mouse — click the view to capture the pointer (**Esc** releases it), or drag with the left mouse button |
 | Restart / change dog | Click **Back to start** in the game HUD |

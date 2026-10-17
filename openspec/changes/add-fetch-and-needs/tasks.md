@@ -27,7 +27,7 @@ Verification is manual — serve the site with any plain static file server and 
 
 ## 5. Documentation
 
-- [ ] 5.1 Update `README.md`: add the throw control (hold left mouse to charge, release to throw) to the controls table, replace the "Fetch and friends arrive in later milestones" line with the fetch loop and mood/energy meters, and mention that an exhausted dog walks until it rests; verify the README matches the shipped behavior and the local-run instructions still work on a fresh clone
+- [x] 5.1 Update `README.md`: add the throw control (hold left mouse to charge, release to throw) to the controls table, replace the "Fetch and friends arrive in later milestones" line with the fetch loop and mood/energy meters, and mention that an exhausted dog walks until it rests; verify the README matches the shipped behavior and the local-run instructions still work on a fresh clone
 
 ## 6. Milestone verification
 
