@@ -146,13 +146,15 @@ export class DogController {
     return { x, z };
   }
 
-  update(dt, cameraYaw) {
+  update(dt, cameraYaw, canRunJump = true) {
     const input = this.readMovementInput();
     const hasInput = input.x !== 0 || input.z !== 0;
     if (hasInput && this.sitting) {
       this.sitting = false;
     }
-    this.running = hasInput && (this.keys.has('ShiftLeft') || this.keys.has('ShiftRight'));
+    // While exhausted the run modifier is ignored (walk-speed cap, so the
+    // walk gait shows) and queued jumps are consumed without firing.
+    this.running = hasInput && (this.keys.has('ShiftLeft') || this.keys.has('ShiftRight')) && canRunJump;
 
     let targetVx = 0;
     let targetVz = 0;
@@ -175,7 +177,7 @@ export class DogController {
 
     if (this.jumpQueued) {
       this.jumpQueued = false;
-      if (this.grounded && !this.sitting) {
+      if (canRunJump && this.grounded && !this.sitting) {
         this.vy = TUNING.jumpVelocity;
         this.grounded = false;
       }
