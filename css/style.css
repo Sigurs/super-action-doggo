@@ -202,8 +202,10 @@ body {
 #lock-hint {
   position: absolute;
   bottom: 4.5vh;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 17.5rem;
+  right: 1.4rem;
+  margin: 0 auto;
+  width: fit-content;
   padding: 0.5rem 1.2rem;
   border-radius: 999px;
   background: rgba(38, 48, 59, 0.55);
@@ -237,10 +239,10 @@ body {
   display: none;
 }
 
+#energy-meter,
 #mood-meter {
   position: absolute;
   left: 1.4rem;
-  bottom: 1.6rem;
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -250,14 +252,22 @@ body {
   pointer-events: none;
 }
 
-.mood-label {
+#energy-meter {
+  bottom: 3.9rem;
+}
+
+#mood-meter {
+  bottom: 1.6rem;
+}
+
+.meter-label {
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-.mood-track {
+.meter-track {
   display: block;
   width: 150px;
   height: 10px;
@@ -273,6 +283,40 @@ body {
   border-radius: inherit;
   background: linear-gradient(90deg, #ffd25e, #ffb347);
   transition: width 180ms ease;
+}
+
+#energy-fill {
+  display: block;
+  width: 90%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6ec6ff, #4a90d9);
+  transition: width 180ms ease;
+}
+
+#charge-bar {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  transform: translateX(-50%);
+  width: 170px;
+  height: 9px;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(38, 48, 59, 0.55);
+  pointer-events: none;
+}
+
+#charge-bar.hidden {
+  display: none;
+}
+
+#charge-fill {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd25e, #ff8a3c);
 }
 
 #bark-bubble {

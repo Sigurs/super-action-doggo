@@ -41,12 +41,17 @@
         <button type="button" id="back-to-start">Back to start</button>
         <div id="fps-counter">-- FPS</div>
       </div>
-      <div id="lock-hint" class="hidden">Click to look around</div>
+      <div id="lock-hint" class="hidden">Click to look around — hold left mouse to throw</div>
       <div id="greet-prompt" class="hidden">Press E to greet</div>
-      <div id="mood-meter" aria-label="Dog mood">
-        <span class="mood-label">Mood</span>
-        <span class="mood-track"><span id="mood-fill"></span></span>
+      <div id="energy-meter" aria-label="Dog energy">
+        <span class="meter-label">Energy</span>
+        <span class="meter-track"><span id="energy-fill"></span></span>
       </div>
+      <div id="mood-meter" aria-label="Dog mood">
+        <span class="meter-label">Mood</span>
+        <span class="meter-track"><span id="mood-fill"></span></span>
+      </div>
+      <div id="charge-bar" class="hidden" aria-hidden="true"><span id="charge-fill"></span></div>
     </section>
     <div id="bark-bubble" aria-hidden="true"></div>
   </div>

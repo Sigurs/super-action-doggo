@@ -4,7 +4,8 @@ import { createPark } from '../park-builder.js';
 import { CameraRig } from '../camera-rig.js';
 import { DogController } from '../dog-controller.js';
 import { DogAnimator } from '../anim.js';
-import { createMood, MOOD_MAX } from '../mood.js';
+import { createNeeds, TUNING as NEEDS_TUNING } from '../needs.js';
+import { createBall } from '../ball.js';
 import { createNpcDogs } from '../npc-dogs.js';
 import { createVisitors } from '../visitors.js';
 import { createDayNight } from '../day-night.js';
@@ -15,7 +16,6 @@ const FOG_FAR = 70;
 const ENABLE_SHADOWS = true;
 const BARK_TEXT = 'Woof!';
 const BARK_VISIBLE_SECONDS = 0.55;
-const GREET_MOOD_GAIN = 8;
 const GREET_PROMPT_RANGE = 2.2;
 const GREET_PROMPT_HIDE_RANGE = 2.6;
 const GREET_TRIGGER_RANGE = 2.5;
@@ -25,6 +25,15 @@ const GREET_PLAYER_SECONDS = 1.9;
 const GREET_TURN_RATE = 8;
 const FPS_WINDOW_SECONDS = 0.5;
 const FPS_PLACEHOLDER = '-- FPS';
+const THROW_CHARGE_SECONDS = 1.2;
+const THROW_MIN_HOLD = 0.2; // holds shorter than this never throw
+const THROW_MIN_SPEED = 6;
+const THROW_MAX_SPEED = 16;
+const THROW_STATIONARY_PX = 8; // unlocked drag beyond this cancels charging
+const THROW_LAUNCH_LIFT = 0.25; // above the head anchor
+const FETCH_PICKUP_RANGE = 0.9; // dog center to resting ball
+const FETCH_DROP_RANGE = 1.5; // carrying dog to throw origin
+const FETCH_DROP_FORWARD = 0.5; // how far in front of the dog the ball lands
 
 const wrapAngle = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
 
@@ -54,8 +63,14 @@ export class PlayingState {
     this.greetNpc = null;
     this.greetTimer = 0;
     this.lastMoodPercent = -1;
+    this.lastEnergyPercent = -1;
     this.fpsFrames = 0;
     this.fpsWindowStart = 0;
+    this.charging = false;
+    this.chargeElapsed = 0;
+    this.chargeStartWall = 0;
+    this.chargeAnchorX = 0;
+    this.chargeAnchorY = 0;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(SKY_COLOR);
@@ -88,9 +103,11 @@ export class PlayingState {
     this.npcDogs = createNpcDogs(this.park);
     this.scene.add(this.npcDogs.group);
 
-    this.mood = createMood();
+    this.ball = createBall(this.scene, this.park);
+
+    this.needs = createNeeds();
     this.visitors = createVisitors(this.park, {
-      onMoodGain: (amount) => this.mood.gain(amount)
+      onMoodGain: (amount) => this.needs.mood.gain(amount)
     });
     this.scene.add(this.visitors.group);
 
@@ -114,6 +131,9 @@ export class PlayingState {
     this.barkBubble = document.getElementById('bark-bubble');
     this.greetPrompt = document.getElementById('greet-prompt');
     this.moodFill = document.getElementById('mood-fill');
+    this.energyFill = document.getElementById('energy-fill');
+    this.chargeBar = document.getElementById('charge-bar');
+    this.chargeFill = document.getElementById('charge-fill');
     this.fpsCounter = document.getElementById('fps-counter');
     this.onBack = () => this.game.changeState('start');
   }
@@ -132,14 +152,35 @@ export class PlayingState {
       }
     };
     this.onMouseDown = (event) => {
-      if (event.button === 0 && document.pointerLockElement !== this.canvas) {
+      if (event.button !== 0) {
+        return;
+      }
+      if (document.pointerLockElement === this.canvas) {
+        // Locked: any left-button hold charges a throw.
+        this.startCharge();
+      } else {
         this.dragging = true;
         this.lastPointerX = event.clientX;
         this.lastPointerY = event.clientY;
+        // Unlocked: a stationary hold charges; a drag cancels it below.
+        this.chargeAnchorX = event.clientX;
+        this.chargeAnchorY = event.clientY;
+        this.startCharge();
       }
     };
-    this.onMouseUp = () => {
-      this.dragging = false;
+    this.onMouseUp = (event) => {
+      const wasCharging = this.charging;
+      // Measure the hold in wall-clock time: the frame-time dt is clamped,
+      // so on slow frames a quick click could otherwise integrate past the
+      // minimum and throw.
+      const held = (performance.now() - this.chargeStartWall) / 1000;
+      this.cancelCharge();
+      if (event.button === 0) {
+        this.dragging = false;
+      }
+      if (wasCharging && held >= THROW_MIN_HOLD) {
+        this.throwBall(this.chargeStrength(held));
+      }
     };
     this.onMouseMove = (event) => {
       if (document.pointerLockElement === this.canvas) {
@@ -151,6 +192,13 @@ export class PlayingState {
         );
         this.lastPointerX = event.clientX;
         this.lastPointerY = event.clientY;
+        if (this.charging) {
+          const dx = event.clientX - this.chargeAnchorX;
+          const dy = event.clientY - this.chargeAnchorY;
+          if (Math.hypot(dx, dy) > THROW_STATIONARY_PX) {
+            this.cancelCharge();
+          }
+        }
       }
     };
     this.onPointerLockChange = () => this.updateLockHint();
@@ -164,6 +212,9 @@ export class PlayingState {
 
   enter(options = {}) {
     this.elapsed = 0;
+    // Re-parent the ball out of the old dog's head before the dog (and any
+    // carried mesh with it) is disposed.
+    this.ball.reset();
     if (this.dog) {
       this.scene.remove(this.dog);
       disposeDog(this.dog);
@@ -181,8 +232,9 @@ export class PlayingState {
     this.animator = new DogAnimator(this.dog);
     this.rig.reset(0, 0);
 
-    this.mood = createMood();
+    this.needs = createNeeds();
     this.lastMoodPercent = -1;
+    this.lastEnergyPercent = -1;
     this.npcDogs.reset();
     this.visitors.reset();
     this.dayNight.reset();
@@ -209,6 +261,8 @@ export class PlayingState {
 
   exit() {
     this.controller.detach();
+    this.cancelCharge();
+    this.ball.reset();
     this.backButton.removeEventListener('click', this.onBack);
     this.canvas.removeEventListener('click', this.onCanvasClick);
     this.canvas.removeEventListener('mousedown', this.onMouseDown);
@@ -298,7 +352,7 @@ export class PlayingState {
       if (npc) {
         const counts = this.npcDogs.tryGreet(npc);
         if (counts) {
-          this.mood.gain(GREET_MOOD_GAIN);
+          this.needs.mood.gain(NEEDS_TUNING.moodGainGreet, 'greet');
         }
         this.greetNpc = npc;
         this.greetTimer = GREET_PLAYER_SECONDS;
@@ -318,17 +372,126 @@ export class PlayingState {
     }
   }
 
-  updateMoodMeter() {
-    const percent = Math.round((this.mood.value / MOOD_MAX) * 100);
-    if (percent !== this.lastMoodPercent) {
-      this.moodFill.style.width = `${percent}%`;
-      this.lastMoodPercent = percent;
+  startCharge() {
+    this.charging = true;
+    this.chargeElapsed = 0;
+    this.chargeStartWall = performance.now();
+    this.chargeFill.style.width = '0%';
+  }
+
+  cancelCharge() {
+    if (!this.charging) {
+      return;
+    }
+    this.charging = false;
+    this.chargeBar.classList.add('hidden');
+  }
+
+  chargeStrength(held) {
+    const t = Math.min(1, held / THROW_CHARGE_SECONDS);
+    return t * t * (3 - 2 * t);
+  }
+
+  throwBall(strength) {
+    const speed = THROW_MIN_SPEED + (THROW_MAX_SPEED - THROW_MIN_SPEED) * strength;
+    // Aim along the camera: horizontal bearing from the rig's yaw, launch
+    // elevation easing down as the camera pitches further down.
+    const elevation = Math.max(0.18, Math.min(0.75, 0.62 - this.rig.pitch * 0.2));
+    const cosE = Math.cos(elevation);
+    const dirX = -Math.sin(this.rig.yaw) * cosE;
+    const dirY = Math.sin(elevation);
+    const dirZ = -Math.cos(this.rig.yaw) * cosE;
+    this.dog.userData.parts.head.getWorldPosition(this.headPosition);
+    this.ball.throw(
+      this.headPosition.x,
+      this.headPosition.y + THROW_LAUNCH_LIFT,
+      this.headPosition.z,
+      dirX,
+      dirY,
+      dirZ,
+      speed,
+      this.controller.x,
+      this.controller.z
+    );
+  }
+
+  updateCharge(dt) {
+    if (!this.charging) {
+      return;
+    }
+    this.chargeElapsed += dt;
+    const strength = this.chargeStrength(this.chargeElapsed);
+    this.chargeFill.style.width = `${Math.round(strength * 100)}%`;
+    // Only surface the bar once the hold is long enough that it can throw,
+    // so orbit drags and the pointer-lock click never flash it.
+    this.chargeBar.classList.toggle(
+      'hidden',
+      this.chargeElapsed < THROW_MIN_HOLD
+    );
+  }
+
+  carryOffset() {
+    const headSize = this.dog.userData.params.headSize;
+    const snoutScale = this.dog.userData.params.snoutScale;
+    const snoutTip = headSize * 0.4 + headSize * 0.5 * snoutScale;
+    return { y: -headSize * 0.34, z: snoutTip + 0.02 };
+  }
+
+  updateFetch() {
+    if (this.ball.state === 'resting' && this.ball.fetchActive) {
+      const dx = this.ball.x - this.controller.x;
+      const dz = this.ball.z - this.controller.z;
+      if (dx * dx + dz * dz < FETCH_PICKUP_RANGE * FETCH_PICKUP_RANGE) {
+        const offset = this.carryOffset();
+        this.ball.carry(this.dog.userData.parts.head, offset.y, offset.z);
+        this.animator.triggerCarryDip();
+      }
+    } else if (this.ball.state === 'carried') {
+      const origin = this.ball.throwOrigin;
+      const dx = origin.x - this.controller.x;
+      const dz = origin.z - this.controller.z;
+      if (dx * dx + dz * dz < FETCH_DROP_RANGE * FETCH_DROP_RANGE) {
+        this.ball.drop(
+          this.controller.x + Math.sin(this.controller.yaw) * FETCH_DROP_FORWARD,
+          this.controller.z + Math.cos(this.controller.yaw) * FETCH_DROP_FORWARD
+        );
+        this.animator.triggerCarryDip();
+        this.needs.mood.gain(NEEDS_TUNING.moodGainFetch, 'fetch');
+      }
+    }
+  }
+
+  activityFor(jumped) {
+    if (jumped) {
+      return 'jump';
+    }
+    const locomotion = this.controller.locomotion;
+    if (locomotion === 'jump') {
+      // Airborne frames after the launch: the jump chunk already paid for it.
+      return 'air';
+    }
+    return locomotion;
+  }
+
+  updateMeters() {
+    const moodPercent = Math.round(this.needs.mood.value);
+    if (moodPercent !== this.lastMoodPercent) {
+      this.moodFill.style.width = `${moodPercent}%`;
+      this.lastMoodPercent = moodPercent;
+    }
+    const energyPercent = Math.round(this.needs.energy.value);
+    if (energyPercent !== this.lastEnergyPercent) {
+      this.energyFill.style.width = `${energyPercent}%`;
+      this.lastEnergyPercent = energyPercent;
     }
   }
 
   update(dt) {
     this.elapsed += dt;
-    this.controller.update(dt, this.rig.yaw);
+    const wasGrounded = this.controller.grounded;
+    this.controller.update(dt, this.rig.yaw, this.needs.canRunJump());
+    const jumped = wasGrounded && !this.controller.grounded;
+    this.needs.update(dt, this.activityFor(jumped));
     if (this.controller.consumeBark()) {
       this.animator.triggerBark();
       this.showBarkBubble();
@@ -337,14 +500,23 @@ export class PlayingState {
     this.npcDogs.update(dt, this.controller);
     this.visitors.update(dt, this.controller);
     this.updateGreet(dt);
+    this.updateCharge(dt);
+    this.ball.update(dt);
+    this.updateFetch();
     this.dayNight.update(dt);
     this.controller.greeting = this.greetNpc !== null;
-    this.animator.update(dt, this.controller);
+    this.animator.update(dt, {
+      locomotion: this.controller.locomotion,
+      speed: this.controller.speed,
+      grounded: this.controller.grounded,
+      greeting: this.greetNpc !== null,
+      carrying: this.ball.state === 'carried'
+    });
     this.rig.update(dt, this.dog.position);
     if (this.elapsed < this.barkVisibleUntil) {
       this.positionBarkBubble();
     }
-    this.updateMoodMeter();
+    this.updateMeters();
     this.updateFpsCounter();
   }
 
