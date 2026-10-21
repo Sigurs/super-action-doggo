@@ -6,7 +6,7 @@ Verification is manual — serve the repository root with a plain static file se
 
 - [x] 1.1 In `buildVisitor` (`js/visitors.js`), change the shared hair geometry and/or `hair.position.set(...)` so no hair face is coplanar with a head face (push the hair back and/or shorten its depth by a small named clearance), keeping the hair a cap that still overhangs the head top and sides; verify by code inspection that the head/hair constants are the only changes and that `GEOMETRIES` head, torso, leg and arm entries, the outfit table, `createVisitors`, `updateVisitor`, `applyPose`, `onBark` and `reset` are untouched
 - [x] 1.2 Compute/confirm the two front-face z values differ by the clearance and that no other visitor part shares a plane (head `z = ±0.105`; hair top/sides/back/bottom vs head/arm/torso/leg planes), so the requirement holds for the whole figure and not just the head
-- [ ] 1.3 Serve the site, spawn into the park, and look at a visitor's head from the front, the sides and above in the browser; confirm the hair is a solid cap with no flickering where it meets the head and that it does not look detached or floating
+- [x] 1.3 Serve the site, spawn into the park, and look at a visitor's head from the front, the sides and above in the browser; confirm the hair is a solid cap with no flickering where it meets the head and that it does not look detached or floating
 - [ ] 1.4 If flicker persists at distance or the clearance looks wrong, adjust the clearance constant (and hair depth if needed) to the smallest value that removes the flicker without a visible gap and re-check; stop tuning once no flicker is visible
 
 ## 2. Visual verification across visitors, angles and motion
