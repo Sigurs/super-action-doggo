@@ -49,6 +49,8 @@ const GEOMETRIES = {
   hair: new THREE.BoxGeometry(0.22, 0.1, 0.23)
 };
 
+const HAIR_HEAD_CLEARANCE = 0.01;
+
 const materialCache = new Map();
 const mat = (color) => {
   let material = materialCache.get(color);
@@ -113,7 +115,7 @@ function buildVisitor(outfit, scale) {
   head.position.y = 0.68;
   torsoPivot.add(head);
   const hair = new THREE.Mesh(GEOMETRIES.hair, mat(outfit.hair));
-  hair.position.set(0, 0.81, -0.01);
+  hair.position.set(0, 0.81, -0.01 - HAIR_HEAD_CLEARANCE);
   torsoPivot.add(hair);
 
   const armPivots = {};
